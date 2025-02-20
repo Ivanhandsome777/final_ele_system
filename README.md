@@ -17,6 +17,17 @@ As shown in the flow chart, the function contains 2 major parts:
 3. After registerring user, you will be able to upload meter readings: enter this page and enter the readings.![image](https://github.com/user-attachments/assets/1ab7e36f-daae-40a8-9f43-0cbb45eec4ed). 
 4. Once the reading is uploaded, the data will directly be flushed into log.txt with timestamp.![{EB65869F-31D8-4015-8663-652F90FD2E7D}](https://github.com/user-attachments/assets/c02c14dd-0c77-42b6-9d59-8a06a4022170)![{D9ECF079-1EB1-4F7B-A2D1-9579FB146D40}](https://github.com/user-attachments/assets/e276bbfd-1e86-4d50-93d4-97631c35b0f2)
 5. If you don't know how to proceed with manipulation, you can visit this address: https://expert-telegram-469jp4jwqp4c76j9-5000.app.github.dev/
+![demo-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/f7095955-8613-46cf-a547-72aaa670b901)
+
+### The User Module
+User can enter user query to check their readings.
+![image](https://github.com/user-attachments/assets/34418dbe-10f3-4fbf-ac27-910670117a1e)
+
+### The Goverernment Module
+The government can enter this module to conduct in-depth analysis.
+![image](https://github.com/user-attachments/assets/96d7b7be-32e6-4817-bb11-0e92381d5abe)
+![{945411A0-72D9-4D44-93F9-705A7C64F063}](https://github.com/user-attachments/assets/046a0266-1c39-40c4-823c-9a28120a4da9)
+
 
 ## Independent Functions
 ### **1. Functions in the functions.py Modules:**
@@ -39,7 +50,8 @@ _Meter Reading Data Generation_
 * generate_readings_designate_date(meter_ids, date): Similar to generate_readings(), but allows the user to specify a target date for readings.
 
 ### **2. Functions in the job.py Modules:**
-
+* batchJobs(): Saves the global DataFrame df_ele to a CSV file with today's date as its filename. Initiates multiple threads to execute csv_job(a, b) in parallel. I serves as the tasks that will be processed after the close of API at 12:00AM.
+* csv_job(a,b): Simulates processing a task by calling recovery(a, b), then waiting for a short period before marking the job as complete. This is a pseudo code to be incorporated with query tree formation function in the future. The task will be splited into different sub-tasks, and undergo threading processing.
 
 ### **3. Other Codes That are Not Applied:**
 * **meter_gen.py**:This code generates simulated electricity meter readings for the past six months by creating random meter IDs and assigning incremental electricity consumption values at 30-minute intervals. The generated data is stored in a Pandas DataFrame, saved as a CSV file for further analysis.
