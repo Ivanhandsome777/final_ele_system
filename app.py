@@ -31,6 +31,8 @@ global_end_date = None
 
 global asd #accidental shutdown
 global admins,users,log_lock,df_ele
+global acceptAPI
+acceptAPI = True
 admins = {} # {email address, password}
 users = {}  # { identifier: {address, region, sub_region, postcode, apartment_type} }
 log_lock = threading.Lock()
