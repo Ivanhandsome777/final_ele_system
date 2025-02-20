@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register New User</title>
+</head>
+<body>
+    <h2>Register New User</h2>
+    {% if message %}
+        <h3 style="color: {% if success %}green{% else %}red{% endif %};">{{ message }}</h3>
+    {% endif %}
+    <form method="POST">
+        Identifier: <input type="text" name="identifier" required><br>
+        Address: <input type="text" name="address" required><br>
+        Region: <input type="text" name="region" required><br>
+        Sub-Region: <input type="text" name="sub_region" required><br>
+        Postcode: <input type="text" name="postcode" required><br>
+        Apartment Type: <input type="text" name="apartment_type" required><br>
+        <button type="submit">Register</button>
+    </form>
+    <br>
+    <a href="/company/main">Return to Main Menu</a>
+</body>
+</html>

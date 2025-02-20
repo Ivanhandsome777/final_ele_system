@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Electricity Data Analysis</title>
+</head>
+<body>
+    <h1>Choose time range to analyze meter data</h1>
+    <form action="/government/query/" method="POST">
+        <label for="start">Starting time:</label>
+        <input type="date" id="start" name="start" required>
+        
+        <label for="end">Ending time:</label>
+        <input type="date" id="end" name="end" required>
+        
+        <button type="submit">Go to visualized analysis</button>
+    </form>
+</body>
+</html>

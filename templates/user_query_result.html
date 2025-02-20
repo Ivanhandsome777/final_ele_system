@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Result</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 20px; }
+        .result-box { border: 1px solid #ddd; padding: 20px; margin-top: 20px; }
+        .error { color: red; }
+        .metric { margin-bottom: 15px; }
+        .metric-label { color: #666; }
+        .metric-value { font-size: 1.2em; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Result</h1>
+    
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% else %}
+        <div class="result-box">
+            <div class="metric">
+                <div class="metric-label">Meter ID:</div>
+                <div class="metric-value">{{ meter_id }}</div>
+            </div>
+            
+            <div class="metric">
+                <div class="metric-label">Enquiry Time Range:</div>
+                <div class="metric-value">
+                    {% if time_range == 'last_half_hour' %}last 30mins
+                    {% elif time_range == 'today' %}today usage
+                    {% elif time_range == 'week' %}this week usage
+                    {% elif time_range == 'month' %}this month usage
+                    {% elif time_range == 'last_month' %}last month usage{% endif %}
+                </div>
+            </div>
+            
+            <div class="metric">
+                <div class="metric-label">Electricty Usage (kWh):</div>
+                <div class="metric-value">{{ usage }}</div>
+            </div>
+            
+            <div class="metric">
+                <div class="metric-label">Last Month Billing Amount (kWh):</div>
+                <div class="metric-value">{{ billing }}</div>
+            </div>
+        </div>
+    {% endif %}
+    
+    <p><a href="/">Back to home</a></p>
+</body>
+</html>

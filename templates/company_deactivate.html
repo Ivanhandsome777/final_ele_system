@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deactivate User</title>
+</head>
+<body>
+    <h2>Deactivate User</h2>
+    {% if message %}
+        <h3 style="color: {% if success is defined and success %}green{% else %}red{% endif %};">
+            {{ message }}
+        </h3>
+    {% endif %}
+    <form method="POST">
+        Identifier: <input type="text" name="identifier" required><br>
+        <button type="submit">Deactivate</button>
+    </form>
+    <br>
+    <a href="/company/main">Return to Main Menu</a>
+</body>
+</html>

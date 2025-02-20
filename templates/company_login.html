@@ -1,0 +1,18 @@
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css')}}">
+</head>
+
+<body>
+    <div class="container">
+        <h2> Company Login</h2>
+        <p>Please enter the email and password</p>
+        <form action="/company/main" method="post">
+            <input type="text" name="email" placeholder="Enter email" required>
+            <input type="password" name="password" placeholder="Enter password" required>
+            <input type="submit" value="Login"> 
+        </form>
+
+
+    </div>
+</body>

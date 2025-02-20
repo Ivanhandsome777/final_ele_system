@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Meter Enquiry System</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 8px; margin-bottom: 10px; }
+        button { background: #4CAF50; color: white; padding: 10px 20px; border: none; cursor: pointer; }
+        .error { color: red; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Electricty Usage Enquiry</h1>
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+    <form method="POST">
+        <div class="form-group">
+            <label for="meter_id">Meter ID:</label>
+            <input type="text" id="meter_id" name="meter_id" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="time_range">Enquiry Time Range:</label>
+            <select id="time_range" name="time_range" required>
+                <option value="last_half_hour">last 30 mins</option>
+                <option value="today">today usage</option>
+                <option value="week">this week usage</option>
+                <option value="month">this month usage</option>
+                <option value="last_month">last month usage</option>
+            </select>
+        </div>
+        
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>

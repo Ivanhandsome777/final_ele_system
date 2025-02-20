@@ -1,0 +1,19 @@
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css')}}">
+</head>
+
+
+
+<body>
+    <div class="container">
+        <h2> User Login</h2>
+        <p>Please enter the identifier.</p>
+        <form action="/user/result" method="post">
+            <input type="text" name="identifier" placeholder="Enter identifier." required>
+            <input type="submit" value="Login"> 
+        </form>
+
+
+    </div>
+</body>
