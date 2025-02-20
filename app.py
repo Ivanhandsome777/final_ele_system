@@ -12,19 +12,35 @@ from flask import Flask, render_template, request, redirect, url_for,render_temp
 import os
 import csv
 from datetime import datetime, timedelta
+# import functions
 from functions import calculate_usage,calculate_billing,preprocess_data,export_data
+from functions import write_log,init_logger,init_daily_csv
 import dash
 from dash import dcc, html, Input, Output
 from dash import dash_table
 import plotly.express as px
-from flask import send_file
-
+from flask import send_file,jsonify
+import threading
+from jobs import batchJobs
 
 app = Flask(__name__)
 df = pd.read_csv('data.csv')
 df = preprocess_data(df)
 global_start_date = None
 global_end_date = None
+
+global asd #accidental shutdown
+global admins,users,log_lock,df_ele
+admins = {} # {email address, password}
+users = {}  # { identifier: {address, region, sub_region, postcode, apartment_type} }
+log_lock = threading.Lock()
+df_ele = pd.DataFrame(columns=['identifier', 'usage', 'timestamp'])  # Initialize DataFrame
+
+
+init_logger() # 启动后台线程处理数据：这里会先检查log如果存在，说明之前意外掉线
+init_daily_csv()
+
+
 # 初始化 Dash 应用
 dashapp = dash.Dash(__name__, server=app, url_base_pathname="/government/query/analysis/")
 
@@ -39,13 +55,9 @@ meter_readings = [
 ]
 
 LOG_FILE = 'meter_logs.txt'
-# read user table and active machine list CSV everytime when initiate the process
-# create empty user dictionary for user register, modity, and deactivate
-admins = {} # {email address, password}
-employees = {"admin@example.com": {"name": "Admin", "password": "password123"}}
-# create empty user dictionary for user register, modity, and deactivate
-users = {}  # { identifier: {address, region, sub_region, postcode, apartment_type} }
+
 # **Load CSV Data When Flask Starts**
+
 def load_data():
     global admins, users
     # load data from admins.csv
@@ -69,8 +81,11 @@ def save_data():
 # initial main page of the website, and directly link to the /company/login page for company_side requests
 @app.route("/", methods=["GET"])
 def mainsite():
-    return render_template('home.html')
-
+    if acceptAPI:
+        return(render_template('home.html'))
+    else:
+        return(render_template('api_shutdown.html'))
+        
 @app.route("/User/query",methods=["GET","POST"])
 def user_query():
     if request.method == 'POST':
@@ -336,6 +351,60 @@ def deactivate_user():
 
     return render_template('company_deactivate.html')
 
+
+@app.route("/company/meter", methods=["GET", "POST"])
+def meter_uploading():
+    if request.method == "POST":
+        identifier = request.form["identifier"]
+        usage = request.form["usage"]
+
+        if identifier in users:
+            now = datetime.now()
+            timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+
+            # Update DataFrame (Ensure global usage)
+            global df_ele
+            new_row = {'identifier': identifier, 'usage': usage, 'timestamp': timestamp}
+            new_df = pd.DataFrame([new_row])
+            df_ele = pd.concat([df_ele, new_df], ignore_index=True)
+            print(df_ele)
+
+            # Append to log file
+            with log_lock:
+                try:
+                    write_log(identifier, timestamp, usage)
+                    return redirect(url_for("meter_uploaded", identifier=identifier, timestamp=timestamp, usage=usage))
+                except Exception as e:
+                    return jsonify({'message': 'Data uploading failed.'})
+
+        return render_template("meter_upload.html", error="Invalid credentials. Try again.")
+
+    return render_template("meter_upload.html", error=None)
+
+@app.route("/meter_uploaded")
+def meter_uploaded():
+    identifier = request.args.get("identifier")
+    timestamp = request.args.get("timestamp")
+    usage = request.args.get("usage")
+    return render_template("upload_success.html", identifier=identifier, timestamp=timestamp, usage=usage)
+
+
+
+@app.route('/stopServer', methods = ['GET','POST'])
+def stop_server():
+    global acceptAPI
+    acceptAPI = False
+    save_data()
+    batchJobs()
+    acceptAPI = True
+    shutdown = request.environ.get("werkzeug.server.shutdown")
+    if shutdown:
+        shutdown()
+    return "<h1>Server is shutting down...</h1>"
+
+   
+
+
 # quit the whole system (not finished yet)
 @app.route("/company/quit")
 def quit_app():
@@ -344,6 +413,7 @@ def quit_app():
 # initiate the app
 if __name__ == '__main__':
     load_data() # load admin and users profile before initiating the app
+    print(users)
     try:
         app.run(debug=False) # using debug = True will result in anaconda bugs, how to fix it?
     finally:

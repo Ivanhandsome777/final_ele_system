@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meter Data Uploading</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Meter Data Uploading</h2>
+
+        {% if error %}
+        <p style="color: red;">{{ error }}</p>
+        {% endif %}
+
+        <form action="/company/meter" method="POST">
+            <label for="identifier">Meter ID:</label>
+            <input type="text" name="identifier" required><br>
+
+            <label for="usage">Electricity Usage:</label>
+            <input type="number" name="usage" required><br>
+
+            <button type="submit">Upload</button>
+        </form>
+    </div>
+</body>
+</html>

@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, redirect, url_for
 from datetime import datetime, timedelta
 import os
 import random
+import threading
 from BTree import BTree
 
 meter_readings = [
@@ -14,6 +15,55 @@ meter_readings = [
 ]
 
 LOG_FILE = 'meter_logs.txt'
+
+
+
+def write_log(identifier, timestamp, usage):
+    """Appends meter data to log.txt."""
+    with open("log.txt", "a") as f:
+        f.write(f"{identifier},{timestamp},{usage}\n")
+
+
+global lock
+global users, df_ele
+lock = threading.Lock()
+
+# 初始化日志
+def init_logger():
+    global asd,df_ele
+    log_file_path = "log.txt"
+    
+    # 检查log.txt是否存在或为空
+    if not os.path.exists(log_file_path) or os.path.getsize(log_file_path) == 0:
+        asd = False
+        # 创建空的log.txt文件
+        with open(log_file_path, 'w') as f:
+            pass
+        
+        # 创建空的DataFrame
+        df_ele = pd.DataFrame(columns=['identifier', 'timestamp', 'usage'])
+    else:
+        # 读取log.txt文件并加载到DataFrame中
+        df_ele = pd.read_csv(log_file_path, names=['identifier', 'timestamp', 'usage'],sep=',')
+        asd = True
+    return df_ele
+
+
+def init_daily_csv():
+    # 获取当前日期并格式化为指定字符串
+    today = datetime.today()
+    date_str = today.strftime("%Y.%m.%d")  # 例如: "2025.09.20"
+    filename_date = date_str.replace(".", "_")  # 转换为"2025_09_20"
+    filename = f"{filename_date}.csv"
+    
+    # 检查文件是否存在
+    if not os.path.exists(filename):
+        # 使用全局变量df_ele保存CSV
+        global df_ele
+        df_ele.to_csv(filename, index=False)
+
+
+
 
 def calculate_usage(meter_id, time_range):
     # 获取目标电表的所有读数并按时间排序
@@ -253,4 +303,5 @@ def ele_query(tree_dict,Identifier=None,dwelling_type=None,Region=None,day=None,
 
 
     return ele_result_dict
-    
+
+
