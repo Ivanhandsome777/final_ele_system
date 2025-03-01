@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Successful</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Upload Successful</h2>
+        <p>Meter ID: <strong>{{ identifier }}</strong></p>
+        <p>Timestamp: <strong>{{ timestamp }}</strong></p>
+        <p>Electricity Usage: <strong>{{ usage }}</strong></p>
+        <a href="/company/meter">Upload Another</a>
+    </div>
+</body>
+</html>

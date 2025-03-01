@@ -1,16 +1,15 @@
 class BTreeNode:
     def __init__(self, leaf=False):
-        self.leaf = leaf  # 是否是叶子结点
-        self.keys = []  # 存储 (key, [values]) 键值对
-        self.children = []  # 存储子节点
+        self.leaf = leaf
+        self.keys = []
+        self.children = []
 
 class BTree:
     def __init__(self, t):
-        self.root = BTreeNode(True)  # 创建根节点
-        self.t = t  # 最小度数（决定树的结构）
+        self.root = BTreeNode(True)
+        self.t = t  
 
     def search(self, key, node=None):
-        """在 B-Tree 中搜索 key 对应的 values（list）"""
         if node is None:
             node = self.root
 
@@ -19,7 +18,7 @@ class BTree:
             i += 1
 
         if i < len(node.keys) and node.keys[i][0] == key:  
-            return node.keys[i][1]  # 返回 values 列表
+            return node.keys[i][1]  
 
         if node.leaf:  
             return None
@@ -27,7 +26,6 @@ class BTree:
         return self.search(key, node.children[i])
 
     def insert(self, key, value):
-        """插入 (key, value) 到 B-Tree"""
         root = self.root
         if len(root.keys) == (2 * self.t) - 1:  
             new_root = BTreeNode(False)
@@ -37,13 +35,12 @@ class BTree:
         self._insert_non_full(self.root, key, value)
 
     def _insert_non_full(self, node, key, value):
-        """向非满节点插入 (key, value)"""
         i = len(node.keys) - 1
         if node.leaf:
             while i >= 0 and node.keys[i][0] > key:  
                 i -= 1
             if i >= 0 and node.keys[i][0] == key:  
-                node.keys[i][1].append(value)  # 追加到已有 key
+                node.keys[i][1].append(value)
             else:
                 node.keys.insert(i + 1, (key, [value]))  
         else:
@@ -57,7 +54,6 @@ class BTree:
             self._insert_non_full(node.children[i], key, value)
 
     def _split_child(self, parent, i):
-        """分裂一个满的子节点"""
         t = self.t
         full_child = parent.children[i]
         new_child = BTreeNode(full_child.leaf)
@@ -73,7 +69,6 @@ class BTree:
             full_child.children = full_child.children[:t]
 
     def traverse(self, node=None):
-        """遍历 B-Tree，按 key 递增顺序打印"""
         if node is None:
             node = self.root
 

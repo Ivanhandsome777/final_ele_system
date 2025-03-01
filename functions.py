@@ -3,7 +3,8 @@ from flask import Flask, render_template, request, redirect, url_for
 from datetime import datetime, timedelta
 import os
 import random
-from BTree import BTree
+import threading
+from tree_index_query_system import BTree
 
 meter_readings = [
     {"meter_id": "524-935-527", "timestamp": datetime(2025, 2, 19, 0, 30), "reading_kwh": 144.5},
@@ -15,8 +16,48 @@ meter_readings = [
 
 LOG_FILE = 'meter_logs.txt'
 
+
+
+def write_log(identifier, timestamp, usage):
+    """Appends meter data to log.txt."""
+    with open("log.txt", "a") as f:
+        f.write(f"{identifier},{timestamp},{usage}\n")
+
+
+global lock
+global users, df_ele
+lock = threading.Lock()
+
+def init_logger():
+    global asd,df_ele
+    log_file_path = "log.txt"
+    
+    if not os.path.exists(log_file_path) or os.path.getsize(log_file_path) == 0:
+        asd = False
+        with open(log_file_path, 'w') as f:
+            pass
+        
+        df_ele = pd.DataFrame(columns=['identifier', 'timestamp', 'usage'])
+    else:
+        df_ele = pd.read_csv(log_file_path, names=['identifier', 'timestamp', 'usage'],sep=',')
+        asd = True
+    return df_ele
+
+
+def init_daily_csv():
+    today = datetime.today()
+    date_str = today.strftime("%Y.%m.%d")
+    filename_date = date_str.replace(".", "_")
+    filename = f"{filename_date}.csv"
+    
+    if not os.path.exists(filename):
+        global df_ele
+        df_ele.to_csv(filename, index=False)
+
+
+
+
 def calculate_usage(meter_id, time_range):
-    # 获取目标电表的所有读数并按时间排序
     readings = sorted(
         [r for r in meter_readings if r['meter_id'] == meter_id],
         key=lambda x: x['timestamp']
@@ -24,7 +65,6 @@ def calculate_usage(meter_id, time_range):
     if not readings:
         return None
 
-    # 确定时间范围边界
     now = datetime.now()
     if time_range == 'last_half_hour':
         start_time = now - timedelta(minutes=30)
@@ -44,7 +84,6 @@ def calculate_usage(meter_id, time_range):
     else:
         return None
 
-    # 找到最接近时间范围边界的读数
     def find_closest(readings, target, mode):
         """
         mode: 'floor' (<= target) or 'ceil' (>= target)
@@ -60,32 +99,27 @@ def calculate_usage(meter_id, time_range):
                else min(candidates, key=lambda x: x['timestamp']) if candidates and mode == 'ceil' \
                else None
 
-    # 获取边界读数
-    start_reading = find_closest(readings, start_time, 'ceil')  # 第一个>=start_time的读数
-    end_reading = find_closest(readings, end_time, 'floor')     # 最后一个<=end_time的读数
+    start_reading = find_closest(readings, start_time, 'ceil')
+    end_reading = find_closest(readings, end_time, 'floor')    
 
     if not start_reading or not end_reading:
         return None
 
-    # 确保时间顺序有效
     if start_reading['timestamp'] > end_reading['timestamp']:
         return None
 
     return round(end_reading['reading_kwh'] - start_reading['reading_kwh'], 2)
 
 def calculate_billing(meter_id):
-    # 获取上月时间范围
     today = datetime.now()
     last_month_end = (today.replace(day=1) - timedelta(days=1))
     last_month_start = last_month_end.replace(day=1)
     
-    # 获取相关读数
     readings = sorted(
         [r for r in meter_readings if r['meter_id'] == meter_id],
         key=lambda x: x['timestamp']
     )
     
-    # 查找边界读数
     start_reading = next((r for r in readings if r['timestamp'] >= last_month_start), None)
     end_reading = next((r for r in reversed(readings) if r['timestamp'] <= last_month_end), None)
     
@@ -98,9 +132,6 @@ def calculate_billing(meter_id):
 
 
 def preprocess_data(df):
-    """
-    计算每个电表的最近一次用电量
-    """
     df['timestamp'] = pd.to_datetime(df[['year', 'month', 'day', 'time']].astype(str).agg(' '.join, axis=1))
     df = df.sort_values(by=['Identifier', 'timestamp'])
 
@@ -112,7 +143,6 @@ def preprocess_data(df):
     return df
 
 def export_data(df, start_date, end_date, file_name='exported_data.csv'):
-    """ 增加时间过滤 """
     filtered_df = df[
         (df['timestamp'] >= pd.to_datetime(start_date)) & 
         (df['timestamp'] <= pd.to_datetime(end_date))
@@ -169,10 +199,8 @@ def generate_readings_designate_date(meter_ids, date):
     start_of_target_day = datetime(target_date.year, target_date.month, target_date.day, 0, 0, 0)
 
     for meter_id in meter_ids:
-        # 随机选择起始时间（介于 00:00 AM - 01:00 AM）
         start_time = datetime(previous_day.year, previous_day.month, previous_day.day, 0, random.randint(0, 59), random.randint(0, 59))
 
-        # 初始化初始电表读数（100-500 之间）
         initial_reading = random.uniform(100, 500)
         readings_list.append({
             "id": meter_id,
@@ -180,12 +208,11 @@ def generate_readings_designate_date(meter_ids, date):
             "electricity": round(initial_reading, 2)
         })
 
-        # 生成每 30 分钟的读数，直到目标日期的 00:00 AM
         current_time = start_time + timedelta(minutes=30)
         last_reading = initial_reading
 
         while current_time < start_of_target_day:
-            new_reading = last_reading + random.uniform(1, 10)  # 在前一个读数基础上递增
+            new_reading = last_reading + random.uniform(1, 10)
             readings_list.append({
                 "id": meter_id,
                 "timestamp": current_time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -194,7 +221,6 @@ def generate_readings_designate_date(meter_ids, date):
             last_reading = new_reading
             current_time += timedelta(minutes=30)
 
-    # 转换为 DataFrame，并按照时间倒序排序
     df = pd.DataFrame(readings_list).sort_values(by=["timestamp"], ascending=False).reset_index(drop=True)
     
     return df
@@ -253,4 +279,5 @@ def ele_query(tree_dict,Identifier=None,dwelling_type=None,Region=None,day=None,
 
 
     return ele_result_dict
-    
+
+
